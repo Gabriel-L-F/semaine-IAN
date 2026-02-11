@@ -1,10 +1,10 @@
 bl_info = {
     "name": "Workspace Navigation Menu",
     "author": "Ton Nom",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (3, 0, 0),
     "category": "Accessibility",
-    "description": "Open a menu to navigate between Blender workspaces/layouts",
+    "description": "Open a menu to navigate between Blender workspaces/layouts, including Sculpting",
 }
 
 import bpy
@@ -20,6 +20,15 @@ class ACCESS_OT_switch_workspace(bpy.types.Operator):
 
     def execute(self, context):
         if self.workspace_name in bpy.data.workspaces:
+            # 🔹 Spécial pour Sculpting : s'assurer qu'un objet MESH est actif
+            if self.workspace_name == "Sculpting":
+                if context.object is None or context.object.type != 'MESH':
+                    mesh_obj = next((o for o in context.scene.objects if o.type == 'MESH'), None)
+                    if mesh_obj:
+                        context.view_layer.objects.active = mesh_obj
+                        mesh_obj.select_set(True)
+
+            # Changer de workspace
             context.window.workspace = bpy.data.workspaces[self.workspace_name]
             self.report({'INFO'}, f"Switched to {self.workspace_name}")
             return {'FINISHED'}
@@ -68,10 +77,10 @@ def register_keymaps():
 
     km = kc.keymaps.new(name="Screen", space_type='EMPTY')
 
-    # CTRL + P opens workspace menu
+    # CTRL + W ouvre le menu des workspaces
     kmi = km.keymap_items.new(
         "access.open_workspace_menu",
-        type='P',
+        type='W',
         value='PRESS',
         ctrl=True
     )
